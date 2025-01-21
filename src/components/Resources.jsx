@@ -973,7 +973,7 @@ const Resources = ({ userType }) => {
                   onChange={(e) => {
                     const updatedJobs = [...editResource.JobDetails];
                     updatedJobs[index] = { ...updatedJobs[index], RolesAndResponsibility: e.target.value || "" };
-                    setEditResource({ ...editResource, JobDetails: updatedJobs });
+                    setEditResource({ ...editResource, JobDetails: updatedJobs });//k
                   }}
                 />
 
