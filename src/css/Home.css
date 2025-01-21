@@ -1,0 +1,134 @@
+/* General Container */
+.home-container {
+  margin-top: 50px; /* Adjust to align with navbar height */
+  padding: 20px;
+  max-width: 1000px;
+  margin-left: auto;
+  margin-right: auto;
+  background-color: #ffffff;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+  font-family: Arial, sans-serif;
+  position: relative; /* Allow absolute positioning for child elements */
+}
+
+/* Dashboard Title */
+.home-container h1 {
+  font-size: 1.8rem;
+  font-weight: bold;
+  margin-bottom: 20px;
+  text-align: center;
+  color: #007bff;
+  text-transform: uppercase;
+}
+
+/* Dropdown Container */
+.top-controls {
+  position: absolute;
+  top: 20px;
+  right: 20px; /* Align dropdown to the right */
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.year-label {
+  font-size: 0.9rem;
+  font-weight: bold;
+  color: #555;
+}
+
+.year-dropdown {
+  padding: 5px 10px;
+  font-size: 0.9rem;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  background-color: #f9f9f9;
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+.year-dropdown:hover {
+  background-color: #e6f7ff;
+  border-color: #007bff;
+}
+
+/* Pie Chart Container */
+.pie-chart-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 20px;
+  padding: 15px;
+  background-color: #f9f9f9;
+  border-radius: 10px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.pie-chart-container canvas {
+  max-width: 400px; /* Limit width for the pie chart */
+  max-height: 400px; /* Ensure height is proportional */
+  width: 100%;
+  height: auto;
+}
+
+/* No Data Message */
+.no-data-message {
+  text-align: center;
+  font-size: 1rem;
+  font-weight: bold;
+  color: #ff4d4d;
+  margin-top: 20px;
+}
+
+/* Legend Styling */
+.chartjs-legend ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.chartjs-legend li {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.8rem;
+  font-weight: bold;
+  color: #555;
+}
+
+.chartjs-legend span {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 5px;
+  border-radius: 50%;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .home-container {
+    padding: 15px;
+  }
+
+  .home-container h1 {
+    font-size: 1.5rem;
+  }
+
+  .pie-chart-container canvas {
+    max-width: 300px; /* Further reduce size on smaller screens */
+    max-height: 300px;
+  }
+
+  .top-controls {
+    top: 10px;
+    right: 10px; /* Adjust for smaller screens */
+  }
+
+  .year-label,
+  .year-dropdown {
+    font-size: 0.8rem;
+  }
+}

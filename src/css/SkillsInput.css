@@ -1,0 +1,91 @@
+/* Container for the skills input section */
+.skills-input-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  
+  /* Skills list */
+  .skills-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 20px; /* Default margin when skills are present */
+  }
+  
+  /* When the skills list is empty, remove the margin */
+  .skills-list.empty {
+    margin-bottom: 0;
+  }
+  
+  /* Individual skill chip */
+  .skill-chip {
+    display: inline-flex;
+    align-items: center;
+    background-color: #007bff;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-size: 0.9rem;
+  }
+  
+  /* Remove button for skill chip */
+  .skill-chip button {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1rem;
+    margin-left: 5px;
+    cursor: pointer;
+    padding: 0;
+  }
+  
+  .skill-chip button:hover {
+    color: #ff0000;
+  }
+  
+  /* Input field styling */
+  .skills-input-container input[type="text"] {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    width: 100%;
+    font-size: 1rem;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Add skill button */
+  .skills-input-container button {
+    padding: 10px 20px;
+    font-size: 1rem;
+    font-weight: bold;
+    color: #fff;
+    background-color: #6c757d;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    align-self: flex-start; /* Align button with input field */
+  }
+  
+  .skills-input-container button:hover {
+    background-color: #5a6268;
+  }
+  
+  /* Responsive design */
+  @media (max-width: 768px) {
+    .skills-input-container {
+      gap: 8px;
+    }
+  
+    .skills-input-container button {
+      font-size: 0.9rem;
+      padding: 8px 15px;
+    }
+  
+    .skill-chip {
+      font-size: 0.8rem;
+    }
+  }
+  

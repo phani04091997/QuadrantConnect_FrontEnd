@@ -1,0 +1,127 @@
+/* General Page Styling */
+body, html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    font-family: 'Inter', sans-serif;
+    background: linear-gradient(135deg, #f6f9fc, #fdfdfd);
+  }
+  
+  /* Flexbox for Centering */
+  .login-page {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background: linear-gradient(to right, #f6f9fc, #ffffff);
+  }
+  
+  /* Login Card Styling */
+  .login-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+    padding: 40px; /* Increased padding for more spacing */
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+  }
+  
+  /* Logo Styling */
+  .logo {
+    font-size: 32px;
+    font-weight: bold;
+    color: #007bff;
+    margin-bottom: 20px;
+  }
+  
+  /* Typography */
+  h2 {
+    font-size: 24px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 10px;
+  }
+  
+  p {
+    font-size: 14px;
+    color: #6c757d;
+    margin-bottom: 30px;
+  }
+  
+  a {
+    color: #007bff;
+    text-decoration: none;
+    font-weight: 500;
+  }
+  
+  a:hover {
+    text-decoration: underline;
+  }
+  
+  /* Input Fields */
+  .form-group {
+    margin-bottom: 20px; /* Added spacing between form groups */
+    text-align: left;
+  }
+  
+  label {
+    display: block;
+    font-size: 14px;
+    color: #333;
+    margin-bottom: 8px;
+  }
+  
+  input {
+    width: 100%;
+    padding: 10px 15px; /* Increased padding inside the input */
+    border: 1px solid #dcdcdc;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #333;
+    outline: none;
+    box-sizing: border-box; /* Ensures padding doesn't break width */
+  }
+  
+  input:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.2);
+  }
+  
+  /* Buttons */
+  .btn-primary {
+    width: 100%;
+    background-color: #007bff;
+    border: none;
+    color: white;
+    padding: 12px 0;
+    font-size: 16px;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  
+  .btn-primary:hover {
+    background-color: #0056b3;
+  }
+  
+  /* Forgot Password */
+  .forgot-password {
+    display: block;
+    text-align: right;
+    font-size: 14px;
+    margin-bottom: 20px;
+  }
+  
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .login-card {
+      padding: 30px 20px; /* Adjusted padding for smaller screens */
+    }
+  
+    .logo {
+      font-size: 28px;
+    }
+  }
+  
