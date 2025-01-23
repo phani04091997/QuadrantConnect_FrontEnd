@@ -23,6 +23,7 @@ const SignUp = () => {
         password,
         confirmPassword,
       });
+      alert("Signed up successfully! Let’s log in and get started.");
       navigate('/');
     } catch (err) {
       setError('Failed to sign up. Please try again.');

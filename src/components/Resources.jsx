@@ -46,6 +46,7 @@ const Resources = ({ userType }) => {
     { StatusId: 28, StatusName: "Mapped to project", StatusType: "h1b" },
   ];
 
+  // OPT Status Options
   const OPTStatusOptions = [
     { StatusId: 29, StatusName: "Application Submitted", StatusType: "opt" },
     { StatusId: 30, StatusName: "Application Not Selected", StatusType: "opt" },
@@ -54,15 +55,15 @@ const Resources = ({ userType }) => {
     { StatusId: 33, StatusName: "Screening Completed", StatusType: "opt" },
     { StatusId: 34, StatusName: "Resource Selected", StatusType: "opt" },
     { StatusId: 35, StatusName: "Resource Not Selected", StatusType: "opt" },
-    { StatusId: 36, StatusName: "CPT", StatusType: "opt" },
-    { StatusId: 37, StatusName: "OPT", StatusType: "opt" },
-    { StatusId: 38, StatusName: "OPT Stem", StatusType: "opt" },
-    { StatusId: 39, StatusName: "Day1 CPT", StatusType: "opt" },
+    { StatusId: 36, StatusName: "OnBoarding Initiated", StatusType: "opt" },
+    { StatusId: 37, StatusName: "OnBoarded", StatusType: "opt" },
+    { StatusId: 38, StatusName: "OffBoarding Initiated", StatusType: "opt" },
+    { StatusId: 39, StatusName: "OffBoarded", StatusType: "opt" },
     { StatusId: 40, StatusName: "Under Training", StatusType: "opt" },
     { StatusId: 41, StatusName: "Training Completed", StatusType: "opt" },
     { StatusId: 42, StatusName: "Shadow Project", StatusType: "opt" },
     { StatusId: 43, StatusName: "Mapped to Project", StatusType: "opt" },
-    { StatusId: 44, StatusName: "Not Mapped to Project", StatusType: "opt" },
+    { StatusId: 44, StatusName: "Bench", StatusType: "opt" },
   ];
   
 
@@ -344,6 +345,7 @@ const Resources = ({ userType }) => {
       PhoneNumber: resource.phoneNumber || "",
       CountryOfOrigin: resource.countryOfOrigin || "",
       UserType: resource.userType || "",
+      WorkStatus: resource.workStatus || "",
       YearOfFiling: resource.yearOfFiling || 0,
       JoiningDate: resource.joiningDate || "",
       ExitDate: resource.exitDate || "",
@@ -488,7 +490,22 @@ const Resources = ({ userType }) => {
         <div className="resource-details">
           <h4>Resource Details</h4>
           <div className="section">
-          <p><strong>Resource Type:</strong> {selectedResource.userType !== "string" && selectedResource.userType !== null ? selectedResource.userType : ""}</p>
+          <p>
+            <strong>Resource Type:</strong>{" "}
+            {selectedResource.userType !== "string" && selectedResource.userType !== null
+              ? selectedResource.userType
+              : ""}
+          </p>
+            
+          {/* Conditionally Render WorkStatus */}
+          {selectedResource.userType === "OPT" && (
+            <p>
+              <strong>Work Status:</strong>{" "}
+              {selectedResource.workStatus !== "string" && selectedResource.workStatus !== null
+                ? selectedResource.workStatus
+                : "N/A"}
+            </p>
+          )}
           <p><strong>First Name:</strong> {selectedResource.firstName !== "string" && selectedResource.firstName !== null ? selectedResource.firstName : ""}</p>
           <p><strong>Middle Name:</strong> {selectedResource.middleName !== "string" && selectedResource.middleName !== null ? selectedResource.middleName : ""}</p>
           <p><strong>Last Name:</strong> {selectedResource.lastName !== "string" && selectedResource.lastName !== null ? selectedResource.lastName : ""}</p>
@@ -500,7 +517,7 @@ const Resources = ({ userType }) => {
           <p><strong>Address (US):</strong> {selectedResource.currentUSAddress !== "string" && selectedResource.currentUSAddress !== null ? selectedResource.currentUSAddress : ""}</p>
           <p><strong>Key Summary:</strong> {selectedResource.keySummary !== "string" && selectedResource.keySummary !== null ? selectedResource.keySummary : ""}</p>
           <p><strong>Year Of Filing:</strong> {selectedResource.yearOfFiling !== "string" && selectedResource.yearOfFiling !== null ? selectedResource.yearOfFiling : ""}</p>
-          <p><strong>Joining Date:</strong> {selectedResource.joiningDate ? new Date(selectedResource.joiningDate).toLocaleString() : "N/A"}</p>
+          <p><strong>Joining Date:</strong>{" "}{selectedResource.joiningDate? new Date(selectedResource.joiningDate.split("T")[0]).toLocaleDateString(): "N/A"}</p>
           <p><strong>Exit Date:</strong> {selectedResource.exitDate ? new Date(selectedResource.exitDate).toLocaleString() : "N/A"}</p>
           </div>
       
@@ -639,7 +656,7 @@ const Resources = ({ userType }) => {
               .filter((status) => status && typeof status === "object") // Ensure valid status objects
               .map((status, index) => (
                 <div key={index} className="section">
-                  <p><strong>Status ID:</strong> {status.statusId || "N/A"}</p>
+                  {/* <p><strong>Status ID:</strong> {status.statusId || "N/A"}</p> */}
                   <p><strong>Status Name:</strong> {status.statusName && status.statusName !== "string" ? status.statusName : "N/A"}</p>
                   <p><strong>Status Type:</strong> {status.statusType && status.statusType !== "string" ? status.statusType : "N/A"}</p>
                   <p><strong>Date and Time Stamp:</strong> {status.dateTimeStamp ? new Date(status.dateTimeStamp).toLocaleString() : "N/A"}</p>
@@ -773,12 +790,45 @@ const Resources = ({ userType }) => {
               onChange={(e) => setEditResource({ ...editResource, CountryOfOrigin: e.target.value })}
             />
 
-            <label>User Type:</label>
-            <input
-              type="text"
+            <label>Resource Type:</label>
+            <select
               value={editResource.UserType || ""}
-              onChange={(e) => setEditResource({ ...editResource, UserType: e.target.value })}
-            />
+              onChange={(e) => {
+                const selectedUserType = e.target.value;
+                setEditResource((prev) => ({
+                  ...prev,
+                  UserType: selectedUserType,
+                  WorkStatus: selectedUserType === "OPT" ? prev.WorkStatus || "" : "", // Clear WorkStatus if UserType is not OPT
+                }));
+              }}
+            >
+              <option value="">Select User Type</option>
+              <option value="H1B">H1B</option>
+              <option value="OPT">OPT</option>
+            </select>
+            
+            {/* Conditionally Render WorkStatus Dropdown */}
+            {editResource.UserType === "OPT" && (
+              <>
+                <label>Work Status:</label>
+                <select
+                  value={editResource.WorkStatus || ""}
+                  onChange={(e) =>
+                    setEditResource((prev) => ({
+                      ...prev,
+                      WorkStatus: e.target.value,
+                    }))
+                  }
+                >
+                  <option value="">Select Work Status</option> {/* Placeholder option */}
+                  <option value="OPT">OPT</option>
+                  <option value="CPT">CPT</option>
+                  <option value="Stem OPT">Stem OPT</option>
+                  <option value="Day 1 CPT">Day 1 CPT</option>
+                </select>
+              </>
+            )}
+
 
             <label>Year Of Filing:</label>
             <select

@@ -55,15 +55,15 @@ const Home = ({ userType }) => {
     { StatusId: 33, StatusName: "Screening Completed", StatusType: "opt" },
     { StatusId: 34, StatusName: "Resource Selected", StatusType: "opt" },
     { StatusId: 35, StatusName: "Resource Not Selected", StatusType: "opt" },
-    { StatusId: 36, StatusName: "CPT", StatusType: "opt" },
-    { StatusId: 37, StatusName: "OPT", StatusType: "opt" },
-    { StatusId: 38, StatusName: "OPT Stem", StatusType: "opt" },
-    { StatusId: 39, StatusName: "Day1 CPT", StatusType: "opt" },
+    { StatusId: 36, StatusName: "OnBoarding Initiated", StatusType: "opt" },
+    { StatusId: 37, StatusName: "OnBoarded", StatusType: "opt" },
+    { StatusId: 38, StatusName: "OffBoarding Initiated", StatusType: "opt" },
+    { StatusId: 39, StatusName: "OffBoarded", StatusType: "opt" },
     { StatusId: 40, StatusName: "Under Training", StatusType: "opt" },
     { StatusId: 41, StatusName: "Training Completed", StatusType: "opt" },
     { StatusId: 42, StatusName: "Shadow Project", StatusType: "opt" },
     { StatusId: 43, StatusName: "Mapped to Project", StatusType: "opt" },
-    { StatusId: 44, StatusName: "Not Mapped to Project", StatusType: "opt" },
+    { StatusId: 44, StatusName: "Bench", StatusType: "opt" },
   ];
 
   // Set the status options dynamically based on the userType

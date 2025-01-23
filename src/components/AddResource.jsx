@@ -19,6 +19,7 @@ const AddResource = () => {
     PhoneNumber: "string",
     CountryOfOrigin: "string",
     UserType: "string",
+    WorkStatus: "string",
     YearOfFiling: 0,
     EducationDetails: [
       {
@@ -65,6 +66,7 @@ const AddResource = () => {
     PhoneNumber: "",
     CountryOfOrigin: "",
     UserType: "",
+    WorkStatus: "",
     YearOfFiling: "",
     EducationDetails: [
       {
@@ -194,7 +196,11 @@ const AddResource = () => {
               ? resourceData[key].map((item) =>
                   typeof item === "string"
                     ? item // For TechnicalSkills
-                    : { ...defaultResourceData[key][0], ...item } // For objects like EducationDetails, JobDetails
+                    : { ...defaultResourceData[key][0], ...item,
+                      Marks: item.Marks || 0,
+                      Grade: item.Grade || "",
+                      Percentage: item.Percentage || 0,
+                    } // For objects like EducationDetails, JobDetails
                 )
               : [...defaultResourceData[key]]; // Use default array if empty
           } else {
@@ -280,7 +286,7 @@ const AddResource = () => {
       <label>
       Experience Years: <span className="required">*</span>
       </label>
-      <input type="number" name="ExperienceYears" value={resourceData.ExperienceYears} onChange={handleInputChange} required/>
+      <input type="number" name="ExperienceYears" value={resourceData.ExperienceYears} onChange={handleInputChange} step="0.01" required/>
 
       <label>
       Technical Skills: <span className="required">*</span>
@@ -313,13 +319,40 @@ const AddResource = () => {
       <select
         name="UserType"
         value={resourceData.UserType}
-        onChange={handleInputChange}
+        onChange={(e) => {
+          handleInputChange(e);
+          if (e.target.value === "H1B") {
+            setResourceData((prev) => ({ ...prev, WorkStatus: "" })); // Clear WorkStatus if H1B is selected
+          }
+        }}
         required
       >
         <option value="">Select Resource Type</option> {/* Placeholder option */}
         <option value="H1B">H1B</option>
         <option value="OPT">OPT</option>
       </select>
+      
+      {/* Conditionally Render WorkStatus Dropdown */}
+      {resourceData.UserType === "OPT" && (
+        <>
+          <label>
+            Work Status: <span className="required">*</span>
+          </label>
+          <select
+            name="WorkStatus"
+            value={resourceData.WorkStatus || ""}
+            onChange={handleInputChange}
+            required
+          >
+            <option value="">Select Work Status</option> {/* Placeholder option */}
+            <option value="OPT">OPT</option>
+            <option value="CPT">CPT</option>
+            <option value="Stem OPT">Stem OPT</option>
+            <option value="Day 1 CPT">Day 1 CPT</option>
+          </select>
+        </>
+      )}
+
 
       <label>
       Year Of Filing: <span className="required">*</span>
@@ -388,31 +421,31 @@ const AddResource = () => {
           required/>
 
           <label>
-          Percentage: <span className="required">*</span>
+          Percentage: 
           </label>
           <input
             type="number"
             value={education.Percentage}
             onChange={(e) => handleNestedInputChange(e, "EducationDetails", index, "Percentage")}
-          required/>
+          />
 
           <label>
-          Grade: <span className="required">*</span>
+          Grade: 
           </label>
           <input
             type="text"
             value={education.Grade}
             onChange={(e) => handleNestedInputChange(e, "EducationDetails", index, "Grade")}
-          required/>
+          />
 
           <label>
-          Marks: <span className="required">*</span>
+          Marks: 
           </label>
           <input
             type="number"
             value={education.Marks}
             onChange={(e) => handleNestedInputChange(e, "EducationDetails", index, "Marks")}
-          required/>
+          />
           <button type="button" onClick={() => handleRemoveEntry("EducationDetails", index)}>
             Remove
           </button>
