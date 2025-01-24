@@ -78,22 +78,26 @@ const Home = ({ userType }) => {
   }, [userType]);
 
   const fetchStatusData = async () => {
-    if (statusOptions.length === 0) return; // Wait until statusOptions is updated
+    if (statusOptions.length === 0) return; 
     try {
-      const promises = statusOptions.map((status) =>
-        axios
-          .get(`https://localhost:7078/api/Resource/status/${status.StatusId}/${userType}/${yearOfFiling}`)
+      const promises = statusOptions.map((status) => {
+        const apiUrl =
+          userType === "H1B"
+            ? `https://localhost:7078/api/Resource/status/${status.StatusId}/${userType}?yearOfFiling=${yearOfFiling}`
+            : `https://localhost:7078/api/Resource/status/${status.StatusId}/${userType}`;
+
+        return axios
+          .get(apiUrl)
           .then((res) => ({
             statusId: status.StatusId,
-            statusName: status.StatusName, // Use StatusName from options
-            count: res.data.length, // Assuming API returns an array of resources
+            statusName: status.StatusName, 
+            count: res.data.length, 
           }))
-          .catch(() => null) // Handle API errors gracefully
-      );
+          .catch(() => null); 
+      });
 
       const results = await Promise.all(promises);
 
-      // Filter out null or empty results
       const filteredData = results.filter((res) => res && res.count > 0);
 
       setStatusData(filteredData);
@@ -104,7 +108,7 @@ const Home = ({ userType }) => {
 
   useEffect(() => {
     fetchStatusData();
-  }, [statusOptions, yearOfFiling]); // Re-fetch data when userType, yearOfFiling, or statusOptions change
+  }, [statusOptions, yearOfFiling]); 
 
   const chartData = {
     labels: statusData.map((item) => item.statusName), // Use statusName for labels
@@ -135,26 +139,37 @@ const Home = ({ userType }) => {
     if (elements.length > 0) {
       const { index } = elements[0];
       const statusId = statusData[index].statusId;
-      navigate(`/resources?statusId=${statusId}&userType=${userType}&yearOfFiling=${yearOfFiling}`);
+      const queryParams =
+        userType === "H1B"
+          ? `statusId=${statusId}&userType=${userType}&yearOfFiling=${yearOfFiling}`
+          : `statusId=${statusId}&userType=${userType}`;
+      navigate(`/resources?${queryParams}`);
     }
   };
 
   return (
     <div className="home-container">
       <h1>Dashboard</h1>
-      <div className="top-controls">
-        <label htmlFor="yearOfFiling" className="year-label">Year of Filing:</label>
-        <select
-          id="yearOfFiling"
-          value={yearOfFiling}
-          onChange={(e) => setYearOfFiling(parseInt(e.target.value, 10))}
-          className="year-dropdown"
-        >
-          <option value={2025}>2025</option>
-          <option value={2024}>2024</option>
-          <option value={2023}>2023</option>
-        </select>
-      </div>
+
+      {/* Year of Filing Dropdown for H1B */}
+      {userType === "H1B" && (
+        <div className="top-controls">
+          <label htmlFor="yearOfFiling" className="year-label">
+            Year of Filing:
+          </label>
+          <select
+            id="yearOfFiling"
+            value={yearOfFiling}
+            onChange={(e) => setYearOfFiling(parseInt(e.target.value, 10))}
+            className="year-dropdown"
+          >
+            <option value={2025}>2025</option>
+            <option value={2024}>2024</option>
+            <option value={2023}>2023</option>
+          </select>
+        </div>
+      )}
+
       {statusData.length > 0 ? (
         <div className="pie-chart-container">
           <Pie

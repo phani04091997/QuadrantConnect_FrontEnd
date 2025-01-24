@@ -122,42 +122,42 @@ const Resources = ({ userType }) => {
     }
   
     try {
-      let response;
+      let apiUrl;
+      let params = {};
   
-      // Case 1: Fetch resources by statusId, resourceType, and yearOfFiling
       if (
         statusId &&
-        (!searchParams || Object.values(searchParams).every(value => value === ""))
+        (!searchParams || Object.values(searchParams).every((value) => value === ""))
       ) {
-        response = await axios.get(
-          `https://localhost:7078/api/Resource/status/${statusId}/${resourceType}/${yearOfFiling}`
-        );
-      }
-      // Case 2: Fetch resources based on searchParams and userType
-      else if (
+        // Case 1: Fetch resources by statusId, resourceType, and yearOfFiling
+        apiUrl =
+          resourceType === "H1B"
+            ? `https://localhost:7078/api/Resource/status/${statusId}/${resourceType}?yearOfFiling=${yearOfFiling}`
+            : `https://localhost:7078/api/Resource/status/${statusId}/${resourceType}`;
+      } else if (
         searchParams &&
         (searchParams.firstName || searchParams.lastName || searchParams.skill)
       ) {
-        response = await axios.get("https://localhost:7078/api/Resource/search", {
-          params: { ...searchParams, userType: resourceType, yearOfFiling },
-        });
-      }
-      // Case 3: Fetch resources by userType and yearOfFiling only
-      else if (resourceType) {
-        response = await axios.get("https://localhost:7078/api/Resource/search-by-usertype", {
-          params: { userType: resourceType, yearOfFiling },
-        });
+        // Case 2: Fetch resources based on searchParams and userType
+        apiUrl = "https://localhost:7078/api/Resource/search";
+        params = { ...searchParams, userType: resourceType, yearOfFiling };
+      } else if (resourceType) {
+        // Case 3: Fetch resources by userType and yearOfFiling only
+        apiUrl = "https://localhost:7078/api/Resource/search-by-usertype";
+        params = { userType: resourceType, yearOfFiling };
       } else {
         // No valid case, return an empty resource list
         setResources([]);
         return;
       }
   
-  const allResources = response.data || [];
-      setResources(allResources); 
+      // Make the API call
+      const response = await axios.get(apiUrl, { params });
+      const allResources = response.data || [];
+      setResources(allResources);
     } catch (error) {
       console.error("Error loading resources:", error);
-      setResources([]); 
+      setResources([]); // Reset resources in case of error
     }
   };
   
