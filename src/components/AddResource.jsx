@@ -21,6 +21,8 @@ const AddResource = () => {
     UserType: "string",
     WorkStatus: "string",
     YearOfFiling: 0,
+    StartDate: new Date().toISOString(),
+    EndDate: new Date().toISOString(),
     EducationDetails: [
       {
         EducationID: 0,
@@ -49,6 +51,7 @@ const AddResource = () => {
     ArrivalCity: "string",
     DepartureDate: new Date().toISOString(),
     ArrivalDate: new Date().toISOString(),
+    ReferredBy: "string",
   };
 
   const [resourceData, setResourceData] = useState({
@@ -68,6 +71,8 @@ const AddResource = () => {
     UserType: "",
     WorkStatus: "",
     YearOfFiling: "",
+    StartDate: "",
+    EndDate: "",
     EducationDetails: [
       {
         EducationID: "",
@@ -103,6 +108,7 @@ const AddResource = () => {
     ArrivalCity: "string",
     DepartureDate: new Date().toISOString(),
     ArrivalDate: new Date().toISOString(),
+    ReferredBy: "",
   });
 
   const [fileUploads, setFileUploads] = useState({
@@ -259,6 +265,27 @@ const AddResource = () => {
     }
   };
 
+  const getDynamicLabels = () => {
+    if (resourceData.UserType === "OPT") {
+      switch (resourceData.WorkStatus) {
+        case "OPT":
+          return { startDate: "OPT Start Date", endDate: "OPT End Date" };
+        case "Stem OPT":
+          return { startDate: "Stem OPT Start Date", endDate: "Stem OPT End Date" };
+        case "CPT":
+          return { startDate: "CPT Start Date", endDate: "CPT End Date" };
+        case "Day 1 CPT":
+          return { startDate: "Day 1 CPT Start Date", endDate: "Day 1 CPT End Date" };
+        default:
+          return { startDate: "Start Date", endDate: "End Date" };
+      }
+    }
+    return { startDate: "Start Date", endDate: "End Date" };
+  };
+
+  const dynamicLabels = getDynamicLabels();
+
+
   return (
   <div className="content-container">
   <div className="add-resource-form">
@@ -332,42 +359,73 @@ const AddResource = () => {
         <option value="OPT">OPT</option>
       </select>
       
-      {/* Conditionally Render WorkStatus Dropdown */}
-      {resourceData.UserType === "OPT" && (
-        <>
-          <label>
-            Work Status: <span className="required">*</span>
-          </label>
-          <select
-            name="WorkStatus"
-            value={resourceData.WorkStatus || ""}
-            onChange={handleInputChange}
-            required
-          >
-            <option value="">Select Work Status</option> {/* Placeholder option */}
-            <option value="OPT">OPT</option>
-            <option value="CPT">CPT</option>
-            <option value="Stem OPT">Stem OPT</option>
-            <option value="Day 1 CPT">Day 1 CPT</option>
-          </select>
-        </>
-      )}
+      {/* Year Of Filing for H1B */}
+      {resourceData.UserType === "H1B" && (
+            <>
+              <label>Year Of Filing:<span className="required">*</span></label>
+              <select
+                name="YearOfFiling"
+                value={resourceData.YearOfFiling}
+                onChange={handleInputChange}
+              >
+                <option value="">Select Year</option>
+                <option value="2025">2025</option>
+                <option value="2024">2024</option>
+                <option value="2023">2023</option>
+              </select>
+            </>
+          )}
 
+          {/* Work Status for OPT */}
+          {resourceData.UserType === "OPT" && (
+            <>
+              <label>Work Status:<span className="required">*</span></label>
+              <select
+                name="WorkStatus"
+                value={resourceData.WorkStatus}
+                onChange={(e) => {
+                  handleInputChange(e);
+                  setResourceData((prev) => ({
+                    ...prev,
+                    StartDate: "",
+                    EndDate: "",
+                  }));
+                }}
+              >
+                <option value="">Select Work Status</option>
+                <option value="OPT">OPT</option>
+                <option value="Stem OPT">Stem OPT</option>
+                <option value="CPT">CPT</option>
+                <option value="Day 1 CPT">Day 1 CPT</option>
+              </select>
+            </>
+          )}
+
+          {/* Dynamic Start and End Date Fields */}
+          {(resourceData.UserType === "OPT" && resourceData.WorkStatus) && (
+            <>
+              <label>{dynamicLabels.startDate}:<span className="required">*</span></label>
+              <input
+                type="date"
+                name="StartDate"
+                value={resourceData.StartDate}
+                onChange={handleInputChange}
+              />
+
+              <label>{dynamicLabels.endDate}:<span className="required">*</span></label>
+              <input
+                type="date"
+                name="EndDate"
+                value={resourceData.EndDate}
+                onChange={handleInputChange}
+              />
+            </>
+          )}
 
       <label>
-      Year Of Filing: <span className="required">*</span>
+      Referred By: <span className="required">*</span>
       </label>
-      <select
-        name="YearOfFiling"
-        value={resourceData.YearOfFiling}
-        onChange={handleInputChange}
-        required
-      >
-        <option value="">Select Year</option> {/* Placeholder option */}
-        <option value="2025">2025</option>
-        <option value="2024">2024</option>
-        <option value="2023">2023</option>
-      </select>
+      <input type="text" name="ReferredBy" value={resourceData.ReferredBy} onChange={handleInputChange} required/>
 
       {/* Education Details */}
       <h3>Education Details</h3>

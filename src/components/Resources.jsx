@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { useSearchParams } from "react-router-dom";
+import ExcelJS from "exceljs"; // Import ExcelJS
+import { saveAs } from "file-saver"; // Import FileSaver
 import "../css/Resources.css";
+import Select from "react-select"; // Import React-Select
 
 const Resources = ({ userType }) => {
   const [resources, setResources] = useState([]);
-  const [searchParams, setSearchParams] = useState({ firstName: "", lastName: "", skill: ""});
   const [selectedResource, setSelectedResource] = useState(null);
   const [editResource, setEditResource] = useState(null);
   const [selectedStatus, setSelectedStatus] = useState(null);
@@ -13,7 +15,37 @@ const Resources = ({ userType }) => {
   const [statusOptions, setStatusOptions] = useState([]);
   const [queryParameters] = useSearchParams();
   const prevUserType = useRef(userType);
+  const [searchOptions, setSearchOptions] = useState([]); // To store selected search fields
+  const [searchValues, setSearchValues] = useState({}); // Store values for the selected search fields
 
+
+  const searchFields = [
+    { value: "firstName", label: "First Name" },
+    { value: "lastName", label: "Last Name" },
+    { value: "skill", label: "Skill" },
+    { value: "joiningDate", label: "Joining Date" },
+  ];
+
+  const handleSearchChange = (selectedOptions) => {
+    // Update the selected search fields
+    setSearchOptions(selectedOptions || []);
+    // Reset values for fields not selected anymore
+    setSearchValues((prev) => {
+      const updatedValues = {};
+      selectedOptions?.forEach((option) => {
+        if (prev[option.value]) {
+          updatedValues[option.value] = prev[option.value];
+        }
+      });
+      return updatedValues;
+    });
+  };
+  
+
+  const handleSearchValueChange = (field, value) => {
+    // Update the value for a specific search field
+    setSearchValues((prev) => ({ ...prev, [field]: value }));
+  };
 
   const H1BStatusOptions = [
     { StatusId: 1, StatusName: "Application submitted", StatusType: "h1b" },
@@ -67,6 +99,110 @@ const Resources = ({ userType }) => {
   ];
   
 
+
+  // Function to export data to Excel
+  const exportToExcel = async () => {
+  if (resources.length === 0) {
+    alert("No resources to export!");
+    return;
+  }
+
+  try {
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Resources");
+
+    // Add header row
+    worksheet.columns = [
+      { header: "Resource ID", key: "resourceID", width: 15 },
+      { header: "First Name", key: "firstName", width: 20 },
+      { header: "Last Name", key: "lastName", width: 20 },
+      { header: "Middle Name", key: "middleName", width: 20 },
+      { header: "Email ID", key: "emailID", width: 25 },
+      { header: "Phone Number", key: "phoneNumber", width: 20 },
+      { header: "Experience Years", key: "experienceYears", width: 15 },
+      { header: "Technical Skills", key: "technicalSkills", width: 30 },
+      { header: "Key Summary", key: "keySummary", width: 40 },
+      { header: "India Address", key: "currentIndiaAddress", width: 30 },
+      { header: "US Address", key: "currentUSAddress", width: 30 },
+      { header: "Country of Origin", key: "countryOfOrigin", width: 20 },
+      { header: "Resource Type", key: "userType", width: 15 },
+      { header: "Work Status", key: "workStatus", width: 20 },
+      { header: "Year of Filing", key: "yearOfFiling", width: 15 },
+      { header: "Joining Date", key: "joiningDate", width: 15 },
+      { header: "Exit Date", key: "exitDate", width: 15 },
+      { header: "Departure City", key: "departureCity", width: 20 },
+      { header: "Arrival City", key: "arrivalCity", width: 20 },
+      { header: "Departure Date", key: "departureDate", width: 20 },
+      { header: "Arrival Date", key: "arrivalDate", width: 20 },
+      { header: "Education Details", key: "educationDetails", width: 40 },
+      { header: "Job Details", key: "jobDetails", width: 40 },
+      { header: "Resume Uploads", key: "resumeUploads", width: 30 },
+      { header: "Referred By", Key: "referredBy", width:20 },
+    ];
+
+    // Add data rows
+    resources.forEach((resource) => {
+      worksheet.addRow({
+        resourceID: resource.resourceID || 0,
+        firstName: resource.firstName || "",
+        lastName: resource.lastName || "",
+        middleName: resource.middleName || "",
+        emailID: resource.emailID || "",
+        phoneNumber: resource.phoneNumber || "",
+        experienceYears: resource.experienceYears || 0,
+        technicalSkills: resource.technicalSkills?.join(", ") || "",
+        keySummary: resource.keySummary || "",
+        currentIndiaAddress: resource.currentIndiaAddress || "",
+        currentUSAddress: resource.currentUSAddress || "",
+        countryOfOrigin: resource.countryOfOrigin || "",
+        userType: resource.userType || "",
+        workStatus: resource.workStatus || "",
+        yearOfFiling: resource.yearOfFiling || 0,
+        joiningDate: resource.joiningDate
+          ? new Date(resource.joiningDate).toLocaleDateString()
+          : "",
+        exitDate: resource.exitDate
+          ? new Date(resource.exitDate).toLocaleDateString()
+          : "",
+        departureCity: resource.departureCity || "",
+        arrivalCity: resource.arrivalCity || "",
+        departureDate: resource.departureDate
+          ? new Date(resource.departureDate).toLocaleDateString()
+          : "",
+        arrivalDate: resource.arrivalDate
+          ? new Date(resource.arrivalDate).toLocaleDateString()
+          : "",
+        educationDetails: resource.educationDetails
+          ?.map(
+            (edu) =>
+              `Institution: ${edu.institutionName}, Graduation Year: ${edu.graduationYear}, GPA: ${edu.gpa}, Grade: ${edu.grade}`
+          )
+          .join("; ") || "N/A",
+        jobDetails: resource.jobDetails
+          ?.map(
+            (job) =>
+              `Company: ${job.company}, Start Date: ${job.startDate}, End Date: ${job.endDate}, Role: ${job.rolesAndResponsibility}`
+          )
+          .join("; ") || "N/A",
+        resumeUploads: resource.resumeUploads?.join(", ") || "N/A",
+        referredBy: resource.referredBy || "",
+      });
+    });
+
+    // Save the workbook
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+    saveAs(blob, "Resources.xlsx");
+    alert("Resources exported successfully!");
+  } catch (error) {
+    console.error("Error exporting to Excel:", error);
+    alert("Failed to export resources.");
+  }
+};
+
+
   const clearActionStates = () => {
     setSelectedResource(null);
     setEditResource(null);
@@ -102,15 +238,8 @@ const Resources = ({ userType }) => {
         break;
     }
   };
-  
-  const handleSearchChange = (field, value) => {
-    const updatedSearchParams = { ...searchParams, [field]: value };
-    setSearchParams(updatedSearchParams);
-    loadResources(updatedSearchParams, userType);
-  };
-  
 
-  const loadResources = async (searchParams = null, userType = null, resetQueryParams = false) => {
+  const loadResources = async (userType = null, resetQueryParams = false) => {
     let statusId = queryParameters.get("statusId");
     let resourceType = userType || queryParameters.get("userType");
     let yearOfFiling = queryParameters.get("yearOfFiling");
@@ -127,7 +256,7 @@ const Resources = ({ userType }) => {
   
       if (
         statusId &&
-        (!searchParams || Object.values(searchParams).every((value) => value === ""))
+        Object.values(searchValues).every((value) => value === "")
       ) {
         // Case 1: Fetch resources by statusId, resourceType, and yearOfFiling
         apiUrl =
@@ -135,12 +264,19 @@ const Resources = ({ userType }) => {
             ? `https://localhost:7078/api/Resource/status/${statusId}/${resourceType}?yearOfFiling=${yearOfFiling}`
             : `https://localhost:7078/api/Resource/status/${statusId}/${resourceType}`;
       } else if (
-        searchParams &&
-        (searchParams.firstName || searchParams.lastName || searchParams.skill)
+        Object.values(searchValues).some((value) => value !== "")
       ) {
-        // Case 2: Fetch resources based on searchParams and userType
+        // Case 2: Fetch resources based on searchFields and userType
         apiUrl = "https://localhost:7078/api/Resource/search";
-        params = { ...searchParams, userType: resourceType, yearOfFiling };
+  
+        // Add dynamic search values to params
+        searchFields.forEach((field) => {
+          if (searchValues[field.value]) {
+            params[field.value] = searchValues[field.value];
+          }
+        });
+        params.userType = resourceType;
+        params.yearOfFiling = yearOfFiling;
       } else if (resourceType) {
         // Case 3: Fetch resources by userType and yearOfFiling only
         apiUrl = "https://localhost:7078/api/Resource/search-by-usertype";
@@ -162,6 +298,7 @@ const Resources = ({ userType }) => {
   };
   
   
+  
    // Dynamically set statusOptions based on userType
    useEffect(() => {
     clearActionStates();
@@ -178,16 +315,15 @@ const Resources = ({ userType }) => {
   useEffect(() => {
     const shouldResetQueryParams =
       prevUserType.current !== userType && queryParameters.get("statusId");
-
+  
     if (shouldResetQueryParams) {
-      loadResources(null, userType, true);
+      loadResources(userType, true); // Pass resetQueryParams as true
     } else {
-      loadResources(searchParams, userType);
+      loadResources(userType); // Load resources based on current userType and search values
     }
-
-    // Update prevUserType after the effect
-    prevUserType.current = userType;
-  }, [userType, searchParams, queryParameters]);
+  
+    prevUserType.current = userType; // Update prevUserType after the effect runs
+  }, [userType, searchValues, searchOptions, queryParameters]);
 
   
   const handleStatusChange = async () => {
@@ -290,9 +426,9 @@ const Resources = ({ userType }) => {
         prevUserType.current !== userType && queryParameters.get("statusId");
 
         if (shouldResetQueryParams) {
-          loadResources(null, userType, true);
+          loadResources(userType, true); 
         } else {
-          loadResources(searchParams, userType);
+          loadResources(userType); 
         }
       
         prevUserType.current = userType;
@@ -317,9 +453,9 @@ const Resources = ({ userType }) => {
         prevUserType.current !== userType && queryParameters.get("statusId");
 
         if (shouldResetQueryParams) {
-          loadResources(null, userType, true);
+          loadResources(userType, true); 
         } else {
-          loadResources(searchParams, userType);
+          loadResources(userType); 
         }
 
         prevUserType.current = userType;
@@ -347,6 +483,8 @@ const Resources = ({ userType }) => {
       UserType: resource.userType || "",
       WorkStatus: resource.workStatus || "",
       YearOfFiling: resource.yearOfFiling || 0,
+      StartDate: resource.startDate || "",
+      EndDate: resource.endDate || "",
       JoiningDate: resource.joiningDate || "",
       ExitDate: resource.exitDate || "",
       EducationDetails: resource.educationDetails || [
@@ -384,7 +522,8 @@ const Resources = ({ userType }) => {
       DepartureCity: resource.departureCity || "",
       ArrivalCity: resource.arrivalCity || "",
       DepartureDate: resource.departureDate || "",
-      ArrivalDate: resource.arrivalDate || ""
+      ArrivalDate: resource.arrivalDate || "",
+      ReferredBy: resource.referredBy || "",
     });
   };
 
@@ -424,27 +563,37 @@ const Resources = ({ userType }) => {
     <div className="resources-tab">
       <h2>Resources</h2>
       <div className="search-bar">
-        <input
-          type="text"
-          placeholder="Search by First Name"
-          value={searchParams.firstName}
-          onChange={(e) => handleSearchChange("firstName", e.target.value)}
+        <Select
+          isMulti
+          options={searchFields}
+          value={searchOptions}
+          onChange={handleSearchChange}
+          placeholder="Select fields to search"
         />
-        <input
-          type="text"
-          placeholder="Search by Last Name"
-          value={searchParams.lastName}
-          onChange={(e) => handleSearchChange("lastName", e.target.value)}
-        />
-        <input
-          type="text"
-          placeholder="Search by Skill"
-          value={searchParams.skill}
-          onChange={(e) => handleSearchChange("skill", e.target.value)}
-        />
-        
-      </div>
 
+        {searchOptions.map((option) => (
+          <div key={option.value}>
+            {option.value === "joiningDate" ? (
+              <input
+                type="date" 
+                placeholder={`Search by ${option.label}`}
+                value={searchValues[option.value] || ""}
+                onChange={(e) => handleSearchValueChange(option.value, e.target.value)}
+              />
+            ) : (
+              <input
+                type="text"
+                placeholder={`Search by ${option.label}`}
+                value={searchValues[option.value] || ""}
+                onChange={(e) => handleSearchValueChange(option.value, e.target.value)}
+              />
+            )}
+          </div>
+        ))      }
+
+        {/* Export to Excel Button */}
+        <button onClick={exportToExcel}>Export Data to Excel</button>
+      </div>
       {/* Resources Table */}
       <table>
         <thead>
@@ -499,13 +648,56 @@ const Resources = ({ userType }) => {
             
           {/* Conditionally Render WorkStatus */}
           {selectedResource.userType === "OPT" && (
-            <p>
-              <strong>Work Status:</strong>{" "}
-              {selectedResource.workStatus !== "string" && selectedResource.workStatus !== null
-                ? selectedResource.workStatus
-                : "N/A"}
-            </p>
+            <>
+              <p>
+                <strong>Work Status:</strong>{" "}
+                {selectedResource.workStatus && selectedResource.workStatus !== "string"
+                  ? selectedResource.workStatus
+                  : "N/A"}
+              </p>
+                
+              {/* Dynamically Render Start Date and End Date Labels */}
+              {selectedResource.workStatus && (
+                <>
+                  <p>
+                    <strong>
+                      {selectedResource.workStatus === "OPT"
+                        ? "OPT Start Date"
+                        : selectedResource.workStatus === "Stem OPT"
+                        ? "Stem OPT Start Date"
+                        : selectedResource.workStatus === "CPT"
+                        ? "CPT Start Date"
+                        : selectedResource.workStatus === "Day 1 CPT"
+                        ? "Day 1 CPT Start Date"
+                        : "Start Date"}
+                      :
+                    </strong>{" "}
+                    {selectedResource.startDate
+                      ? new Date(selectedResource.startDate).toLocaleDateString()
+                      : "N/A"}
+                  </p>
+                  <p>
+                    <strong>
+                      {selectedResource.workStatus === "OPT"
+                        ? "OPT End Date"
+                        : selectedResource.workStatus === "Stem OPT"
+                        ? "Stem OPT End Date"
+                        : selectedResource.workStatus === "CPT"
+                        ? "CPT End Date"
+                        : selectedResource.workStatus === "Day 1 CPT"
+                        ? "Day 1 CPT End Date"
+                        : "End Date"}
+                      :
+                    </strong>{" "}
+                    {selectedResource.endDate
+                      ? new Date(selectedResource.endDate).toLocaleDateString()
+                      : "N/A"}
+                  </p>
+                </>
+              )}
+            </>
           )}
+
           <p><strong>First Name:</strong> {selectedResource.firstName !== "string" && selectedResource.firstName !== null ? selectedResource.firstName : ""}</p>
           <p><strong>Middle Name:</strong> {selectedResource.middleName !== "string" && selectedResource.middleName !== null ? selectedResource.middleName : ""}</p>
           <p><strong>Last Name:</strong> {selectedResource.lastName !== "string" && selectedResource.lastName !== null ? selectedResource.lastName : ""}</p>
@@ -517,6 +709,7 @@ const Resources = ({ userType }) => {
           <p><strong>Address (US):</strong> {selectedResource.currentUSAddress !== "string" && selectedResource.currentUSAddress !== null ? selectedResource.currentUSAddress : ""}</p>
           <p><strong>Key Summary:</strong> {selectedResource.keySummary !== "string" && selectedResource.keySummary !== null ? selectedResource.keySummary : ""}</p>
           <p><strong>Year Of Filing:</strong> {selectedResource.yearOfFiling !== "string" && selectedResource.yearOfFiling !== null ? selectedResource.yearOfFiling : ""}</p>
+          <p><strong>Referred By:</strong> {selectedResource.referredBy !== "string" && selectedResource.referredBy !== null ? selectedResource.referredBy : ""}</p>
           <p><strong>Joining Date:</strong>{" "}{selectedResource.joiningDate? new Date(selectedResource.joiningDate.split("T")[0]).toLocaleDateString(): "N/A"}</p>
           <p><strong>Exit Date:</strong> {selectedResource.exitDate ? new Date(selectedResource.exitDate).toLocaleString() : "N/A"}</p>
           </div>
@@ -799,6 +992,7 @@ const Resources = ({ userType }) => {
                   ...prev,
                   UserType: selectedUserType,
                   WorkStatus: selectedUserType === "OPT" ? prev.WorkStatus || "" : "", // Clear WorkStatus if UserType is not OPT
+                  YearOfFiling: selectedUserType === "H1B" ? prev.YearOfFiling || "" : "", // Clear YearOfFiling if UserType is not H1B
                 }));
               }}
             >
@@ -807,40 +1001,98 @@ const Resources = ({ userType }) => {
               <option value="OPT">OPT</option>
             </select>
             
-            {/* Conditionally Render WorkStatus Dropdown */}
+            {/* Conditionally Render Year of Filing for H1B */}
+            {editResource.UserType === "H1B" && (
+              <>
+                <label>Year Of Filing:</label>
+                <select
+                  value={editResource.YearOfFiling || ""}
+                  onChange={(e) =>
+                    setEditResource({ ...editResource, YearOfFiling: parseInt(e.target.value, 10) || "" })
+                  }
+                >
+                  <option value="" disabled>Select a year</option>
+                  <option value="2025">2025</option>
+                  <option value="2024">2024</option>
+                  <option value="2023">2023</option>
+                </select>
+              </>
+            )}
+
+            {/* Conditionally Render Work Status for OPT */}
             {editResource.UserType === "OPT" && (
               <>
                 <label>Work Status:</label>
                 <select
                   value={editResource.WorkStatus || ""}
-                  onChange={(e) =>
+                  onChange={(e) => {
+                    const selectedWorkStatus = e.target.value;
                     setEditResource((prev) => ({
                       ...prev,
-                      WorkStatus: e.target.value,
-                    }))
-                  }
+                      WorkStatus: selectedWorkStatus,
+                      StartDate: "", // Reset StartDate when WorkStatus changes
+                      EndDate: "", // Reset EndDate when WorkStatus changes
+                    }));
+                  }}
                 >
-                  <option value="">Select Work Status</option> {/* Placeholder option */}
+                  <option value="">Select Work Status</option>
                   <option value="OPT">OPT</option>
                   <option value="CPT">CPT</option>
                   <option value="Stem OPT">Stem OPT</option>
                   <option value="Day 1 CPT">Day 1 CPT</option>
                 </select>
+                
+                {/* Conditionally Render Start and End Date Labels Based on Work Status */}
+                {editResource.WorkStatus && (
+                  <>
+                    <label>
+                      {editResource.WorkStatus === "OPT"
+                        ? "OPT Start Date"
+                        : editResource.WorkStatus === "CPT"
+                        ? "CPT Start Date"
+                        : editResource.WorkStatus === "Stem OPT"
+                        ? "Stem OPT Start Date"
+                        : "Day 1 CPT Start Date"}
+                      :
+                    </label>
+                    <input
+                      type="date"
+                      value={editResource.StartDate ? editResource.StartDate.split("T")[0] : ""}
+                      onChange={(e) =>
+                        setEditResource((prev) => ({ ...prev, StartDate: e.target.value }))
+                      }
+                    />
+
+                    <label>
+                      {editResource.WorkStatus === "OPT"
+                        ? "OPT End Date"
+                        : editResource.WorkStatus === "CPT"
+                        ? "CPT End Date"
+                        : editResource.WorkStatus === "Stem OPT"
+                        ? "Stem OPT End Date"
+                        : "Day 1 CPT End Date"}
+                      :
+                    </label>
+                    <input
+                      type="date"
+                      value={editResource.EndDate ? editResource.EndDate.split("T")[0] : ""}
+                      onChange={(e) =>
+                        setEditResource((prev) => ({ ...prev, EndDate: e.target.value }))
+                      }
+                    />
+                  </>
+                )}
               </>
             )}
 
+            <label>Referred By:</label>
+            <input
+              type="text"
+              value={editResource.ReferredBy || ""}
+              onChange={(e) => setEditResource({ ...editResource, ReferredBy: e.target.value })}
+            />
 
-            <label>Year Of Filing:</label>
-            <select
-              value={editResource.YearOfFiling || ''}
-              onChange={(e) => setEditResource({ ...editResource, YearOfFiling: parseInt(e.target.value, 10) || 0 })}
-            >
-              <option value="" disabled>Select a year</option>
-              <option value="2025">2025</option>
-              <option value="2024">2024</option>
-              <option value="2023">2023</option>
-            </select>
-            
+
             <label>Joining Date:</label>
             <input
               type="date"
