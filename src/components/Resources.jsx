@@ -24,6 +24,8 @@ const Resources = ({ userType }) => {
     { value: "lastName", label: "Last Name" },
     { value: "skill", label: "Skill" },
     { value: "joiningDate", label: "Joining Date" },
+    { value: "startDate", label: "Start Date" },
+    { value: "endDate", label: "End Date" },
   ];
 
   const handleSearchChange = (selectedOptions) => {
@@ -110,9 +112,9 @@ const Resources = ({ userType }) => {
   try {
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet("Resources");
-
-    // Add header row
-    worksheet.columns = [
+  
+    // Define common columns
+    const columns = [
       { header: "Resource ID", key: "resourceID", width: 15 },
       { header: "First Name", key: "firstName", width: 20 },
       { header: "Last Name", key: "lastName", width: 20 },
@@ -126,8 +128,22 @@ const Resources = ({ userType }) => {
       { header: "US Address", key: "currentUSAddress", width: 30 },
       { header: "Country of Origin", key: "countryOfOrigin", width: 20 },
       { header: "Resource Type", key: "userType", width: 15 },
-      { header: "Work Status", key: "workStatus", width: 20 },
-      { header: "Year of Filing", key: "yearOfFiling", width: 15 },
+    ];
+  
+    // Dynamically add Year Of Filing for H1B or Work Status, Start Date, End Date for OPT
+    if (resources.some((resource) => resource.userType === "H1B")) {
+      columns.push({ header: "Year of Filing", key: "yearOfFiling", width: 15 });
+    }
+    if (resources.some((resource) => resource.userType === "OPT")) {
+      columns.push(
+        { header: "Work Status", key: "workStatus", width: 20 },
+        { header: "Start Date", key: "startDate", width: 15 },
+        { header: "End Date", key: "endDate", width: 15 }
+      );
+    }
+  
+    // Add the rest of the columns
+    columns.push(
       { header: "Joining Date", key: "joiningDate", width: 15 },
       { header: "Exit Date", key: "exitDate", width: 15 },
       { header: "Departure City", key: "departureCity", width: 20 },
@@ -136,13 +152,14 @@ const Resources = ({ userType }) => {
       { header: "Arrival Date", key: "arrivalDate", width: 20 },
       { header: "Education Details", key: "educationDetails", width: 40 },
       { header: "Job Details", key: "jobDetails", width: 40 },
-      { header: "Resume Uploads", key: "resumeUploads", width: 30 },
-      { header: "Referred By", Key: "referredBy", width:20 },
-    ];
-
+      { header: "Referred By", key: "referredBy", width: 20 }
+    );
+  
+    worksheet.columns = columns;
+  
     // Add data rows
     resources.forEach((resource) => {
-      worksheet.addRow({
+      const rowData = {
         resourceID: resource.resourceID || 0,
         firstName: resource.firstName || "",
         lastName: resource.lastName || "",
@@ -156,8 +173,6 @@ const Resources = ({ userType }) => {
         currentUSAddress: resource.currentUSAddress || "",
         countryOfOrigin: resource.countryOfOrigin || "",
         userType: resource.userType || "",
-        workStatus: resource.workStatus || "",
-        yearOfFiling: resource.yearOfFiling || 0,
         joiningDate: resource.joiningDate
           ? new Date(resource.joiningDate).toLocaleDateString()
           : "",
@@ -184,11 +199,28 @@ const Resources = ({ userType }) => {
               `Company: ${job.company}, Start Date: ${job.startDate}, End Date: ${job.endDate}, Role: ${job.rolesAndResponsibility}`
           )
           .join("; ") || "N/A",
-        resumeUploads: resource.resumeUploads?.join(", ") || "N/A",
         referredBy: resource.referredBy || "",
-      });
+      };
+  
+      // Add Year Of Filing for H1B
+      if (resource.userType === "H1B") {
+        rowData.yearOfFiling = resource.yearOfFiling || 0;
+      }
+  
+      // Add Work Status, Start Date, and End Date for OPT
+      if (resource.userType === "OPT") {
+        rowData.workStatus = resource.workStatus || "";
+        rowData.startDate = resource.startDate
+          ? new Date(resource.startDate).toLocaleDateString()
+          : "";
+        rowData.endDate = resource.endDate
+          ? new Date(resource.endDate).toLocaleDateString()
+          : "";
+      }
+  
+      worksheet.addRow(rowData);
     });
-
+  
     // Save the workbook
     const buffer = await workbook.xlsx.writeBuffer();
     const blob = new Blob([buffer], {
@@ -200,6 +232,7 @@ const Resources = ({ userType }) => {
     console.error("Error exporting to Excel:", error);
     alert("Failed to export resources.");
   }
+  
 };
 
 
@@ -563,6 +596,7 @@ const Resources = ({ userType }) => {
     <div className="resources-tab">
       <h2>Resources</h2>
       <div className="search-bar">
+        {/* Multi-Select Dropdown for Search Fields */}
         <Select
           isMulti
           options={searchFields}
@@ -571,16 +605,19 @@ const Resources = ({ userType }) => {
           placeholder="Select fields to search"
         />
 
+        {/* Dynamically Render Inputs for Selected Search Fields */}
         {searchOptions.map((option) => (
           <div key={option.value}>
-            {option.value === "joiningDate" ? (
+            {["joiningDate", "startDate", "endDate"].includes(option.value) ? (
+              // Render date input for joiningDate, startDate, and endDate
               <input
-                type="date" 
+                type="date"
                 placeholder={`Search by ${option.label}`}
                 value={searchValues[option.value] || ""}
                 onChange={(e) => handleSearchValueChange(option.value, e.target.value)}
               />
             ) : (
+              // Render text input for firstName, lastName, and skill
               <input
                 type="text"
                 placeholder={`Search by ${option.label}`}
@@ -589,11 +626,12 @@ const Resources = ({ userType }) => {
               />
             )}
           </div>
-        ))      }
+        ))}
 
-        {/* Export to Excel Button */}
-        <button onClick={exportToExcel}>Export Data to Excel</button>
-      </div>
+    {/* Export to Excel Button */}
+    <button onClick={exportToExcel}>Export Data to Excel</button>
+  </div>
+
       {/* Resources Table */}
       <table>
         <thead>
@@ -603,13 +641,21 @@ const Resources = ({ userType }) => {
             <th>Skill</th>
             <th>Status</th>
             <th>Resource Type</th>
+            {resources.some((resource) => resource.userType === "H1B") && <th>Year Of Filing</th>}
+            {resources.some((resource) => resource.userType === "OPT") && (
+              <>
+                <th>Work Status</th>
+                <th>Start Date</th>
+                <th>End Date</th>
+              </>
+            )}
             <th>Actions</th>
           </tr>
         </thead>
         <tbody>
           {resources.length === 0 ? (
             <tr>
-              <td colSpan="6">No resources found</td>
+              <td colSpan="9">No resources found</td>
             </tr>
           ) : (
             resources.map((resource, index) => (
@@ -619,6 +665,16 @@ const Resources = ({ userType }) => {
                 <td>{resource.technicalSkills?.join(", ") || "N/A"}</td>
                 <td>{resource.statusDetails?.[resource.statusDetails.length - 1]?.statusName || "N/A"}</td>
                 <td>{resource.userType || "N/A"}</td>
+            
+                {resource.userType === "H1B" && <td>{resource.yearOfFiling || "N/A"}</td>}
+            
+                {resource.userType === "OPT" && (
+                  <>
+                    <td>{resource.workStatus && resource.workStatus !== "string" ? resource.workStatus : "N/A"}</td>
+                    <td>{resource.startDate ? new Date(resource.startDate).toLocaleDateString() : "N/A"}</td>
+                    <td>{resource.endDate ? new Date(resource.endDate).toLocaleDateString() : "N/A"}</td>
+                  </>
+                )}
                 <td>
                   <button onClick={() => handleActionClick("viewDetails", resource)}>View Details</button>
                   <button onClick={() => handleActionClick("edit", resource)}>Edit</button>
@@ -698,6 +754,16 @@ const Resources = ({ userType }) => {
             </>
           )}
 
+          {selectedResource.userType === "H1B" && (
+            <p>
+              <strong>Year Of Filing:</strong>{" "}
+              {selectedResource.yearOfFiling !== "string" && selectedResource.yearOfFiling !== null
+                ? selectedResource.yearOfFiling
+                : "N/A"}
+            </p>
+          )}
+
+
           <p><strong>First Name:</strong> {selectedResource.firstName !== "string" && selectedResource.firstName !== null ? selectedResource.firstName : ""}</p>
           <p><strong>Middle Name:</strong> {selectedResource.middleName !== "string" && selectedResource.middleName !== null ? selectedResource.middleName : ""}</p>
           <p><strong>Last Name:</strong> {selectedResource.lastName !== "string" && selectedResource.lastName !== null ? selectedResource.lastName : ""}</p>
@@ -708,7 +774,6 @@ const Resources = ({ userType }) => {
           <p><strong>Address (India):</strong> {selectedResource.currentIndiaAddress !== "string" && selectedResource.currentIndiaAddress !== null ? selectedResource.currentIndiaAddress : ""}</p>
           <p><strong>Address (US):</strong> {selectedResource.currentUSAddress !== "string" && selectedResource.currentUSAddress !== null ? selectedResource.currentUSAddress : ""}</p>
           <p><strong>Key Summary:</strong> {selectedResource.keySummary !== "string" && selectedResource.keySummary !== null ? selectedResource.keySummary : ""}</p>
-          <p><strong>Year Of Filing:</strong> {selectedResource.yearOfFiling !== "string" && selectedResource.yearOfFiling !== null ? selectedResource.yearOfFiling : ""}</p>
           <p><strong>Referred By:</strong> {selectedResource.referredBy !== "string" && selectedResource.referredBy !== null ? selectedResource.referredBy : ""}</p>
           <p><strong>Joining Date:</strong>{" "}{selectedResource.joiningDate? new Date(selectedResource.joiningDate.split("T")[0]).toLocaleDateString(): "N/A"}</p>
           <p><strong>Exit Date:</strong> {selectedResource.exitDate ? new Date(selectedResource.exitDate).toLocaleString() : "N/A"}</p>
